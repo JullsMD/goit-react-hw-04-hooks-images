@@ -14,7 +14,7 @@ function App() {
   const [page, setPage] = useState(1);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImg, setSelectedImg] = useState('');
@@ -70,11 +70,12 @@ function App() {
 
   return (
     <>
+      {/* <Toaster /> */}
       <Searchbar onSubmit={handleSubmit} />
       {images.length > 0 && !error && (
         <ImageGallery images={images} onSelect={handleSelectImage} />
       )}
-      {/* <Toaster /> */}
+
       {/* {error && toast.error('Error')} */}
       {loading && (
         <Loader
