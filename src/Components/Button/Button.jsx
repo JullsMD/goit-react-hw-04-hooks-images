@@ -1,9 +1,9 @@
 import styles from './Button.module.css';
 import PropTypes from 'prop-types';
 
-const Button = ({ fetchImages }) => {
+const Button = ({ getImages }) => {
   return (
-    <button className={styles.Button} type="button" onClick={fetchImages}>
+    <button className={styles.Button} type="button" onClick={getImages}>
       Load more
     </button>
   );
@@ -12,5 +12,5 @@ const Button = ({ fetchImages }) => {
 export default Button;
 
 Button.propTypes = {
-  fetchImages: PropTypes.func.isRequired,
+  getImages: PropTypes.func.isRequired,
 };

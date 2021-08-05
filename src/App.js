@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import API from './Services/API';
 
 import Searchbar from './Components/Searchbar/Searchbar';
@@ -6,88 +6,93 @@ import ImageGallery from './Components/ImageGallery/ImageGallery';
 import Modal from './Components/Modal/Modal';
 import Button from './Components/Button/Button';
 import Loader from 'react-loader-spinner';
-import { Toaster } from 'react-hot-toast';
+// import toast, { Toaster } from 'react-hot-toast';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import css from './Components/Loader/Loader.module.css';
-class App extends Component {
-  state = {
-    page: 1,
-    images: [],
-    loading: false,
-    error: null,
-    showModal: false,
-    searchQuery: '',
-    selectedImg: '',
-  };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, page } = this.state;
+function App() {
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedImg, setSelectedImg] = useState('');
 
-    if (prevState.searchQuery !== searchQuery) {
-      this.fetchImages();
+  useEffect(() => {
+    if (!searchQuery) {
+      return;
     }
-    if (page !== 2 && prevState.page !== page) {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+    const fetchImages = async () => {
+      try {
+        const api = await API.fetchImages({ searchQuery, page });
+        if (api.length === 0) {
+          return setError(true);
+        }
+        setImages(prevImages => [...prevImages, ...api]);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImages();
+  }, [searchQuery, page]);
+
+  const getImages = () => {
+    setLoading(true);
+    scroll();
+    setPage(page => page + 1);
+  };
+  const scroll = () => {
+    window.scrollBy({
+      top: document.documentElement.clientHeight - 160,
+      behavior: 'smooth',
+    });
+  };
+  const toggleModal = () => {
+    setShowModal(!showModal);
   };
 
-  handleSelectImage = image => {
-    this.setState({ selectedImg: image });
-    this.toggleModal();
+  const handleSelectImage = image => {
+    setSelectedImg(image);
+    toggleModal();
   };
 
-  handleSubmit = query => {
-    this.setState({ images: [], searchQuery: query, page: 1 });
+  const handleSubmit = query => {
+    setImages([]);
+    setSearchQuery(query);
+    setPage(1);
+    setError(null);
+    setLoading(true);
   };
 
-  fetchImages = () => {
-    const { searchQuery, page } = this.state;
+  return (
+    <>
+      <Searchbar onSubmit={handleSubmit} />
+      {images.length > 0 && !error && (
+        <ImageGallery images={images} onSelect={handleSelectImage} />
+      )}
+      {/* <Toaster /> */}
+      {/* {error && toast.error('Error')} */}
+      {loading && (
+        <Loader
+          className={css.loader}
+          type="TailSpin"
+          color="#00BFFF"
+          height={80}
+          width={80}
+          timeout={1000}
+        />
+      )}
 
-    this.setState({ loading: true });
-    API.fetchImages({ searchQuery, page })
-      .then(hits => {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...hits],
-          page: prevState.page + 1,
-        }));
-      })
-      .catch(error => this.setState({ error: true }))
-      .finally(() => this.setState({ loading: false }));
-  };
-
-  render() {
-    const { images, loading, selectedImg, showModal } = this.state;
-    return (
-      <>
-        <Searchbar onSubmit={this.handleSubmit} />
-        <Toaster />
-        {loading && (
-          <Loader
-            className={css.loader}
-            type="TailSpin"
-            color="#00BFFF"
-            height={80}
-            width={80}
-            timeout={5000} //3 secs
-          />
-        )}
-        <ImageGallery images={images} onSelect={this.handleSelectImage} />
-        {images.length > 0 && <Button fetchImages={this.fetchImages} />}
-        {showModal && (
-          <Modal onClose={this.toggleModal} largeImageURL={selectedImg} />
-        )}
-      </>
-    );
-  }
+      {!loading && images.length >= 12 && !error && (
+        <Button getImages={getImages} />
+      )}
+      {showModal && <Modal onClose={toggleModal} largeImageURL={selectedImg} />}
+    </>
+  );
 }
 
 export default App;
