@@ -42,15 +42,22 @@ function App() {
 
   const getImages = () => {
     setLoading(true);
-    scroll();
     setPage(page => page + 1);
   };
-  const scroll = () => {
-    window.scrollBy({
-      top: document.documentElement.clientHeight - 160,
-      behavior: 'smooth',
-    });
-  };
+
+  useEffect(() => {
+    const scroll = () => {
+      window.scrollBy({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+      });
+    };
+
+    if (page > 1) {
+      scroll();
+    }
+  }, [images, page]);
+
   const toggleModal = () => {
     setShowModal(!showModal);
   };
